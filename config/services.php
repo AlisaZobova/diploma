@@ -30,5 +30,15 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
-
+    'openai' => [
+        'testing' => (bool) env('OPENAI_TESTING', false),
+        'api_key' => env('OPENAI_API_KEY'),
+    ],
+    'elasticsearch' => [
+        'host' => env('ELASTICSEARCH_HOST', 'http://localhost:9200'),
+        'username' => env('ELASTICSEARCH_USERNAME', 'elastic'),
+        'password' => env('ELASTICSEARCH_PASSWORD'),
+        'crt_path' => base_path() . env('ELASTICSEARCH_CRT_PATH'),
+        'api_key' => base_path() . env('ELASTICSEARCH_API_KEY')
+    ]
 ];
