@@ -19,9 +19,9 @@ class Accessor implements Contracts\ElasticsearchContract
     {
         $this->client = ClientBuilder::create()
             ->setHosts([config('services.elasticsearch.host')])
-//            ->setBasicAuthentication(config('services.elasticsearch.username'), config('services.elasticsearch.password'))
+            ->setBasicAuthentication(config('services.elasticsearch.username'), config('services.elasticsearch.password'))
             ->setCABundle(config('services.elasticsearch.crt_path'))
-            ->setApiKey(config('services.elasticsearch.api_key'))
+//            ->setApiKey(config('services.elasticsearch.api_key'))
             ->build();
 
         $this->indexName = 'embeddings';
