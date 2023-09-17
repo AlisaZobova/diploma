@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ElasticSearchRequests\GetRecommendationsRequest;
 use App\Services\ElasticsearchService;
-use Illuminate\Http\Request;
 
 class ElasticsearchController extends Controller
 {
@@ -13,8 +13,9 @@ class ElasticsearchController extends Controller
     ) {
         //
     }
-    public function getRecommendations(Request $request) {
-        $content = $request->query('search');
-        return $this->elasticsearchService->getRecommendations($content);
+    public function getRecommendations(GetRecommendationsRequest $request) {
+        $searchRequest = $request->query('search');
+        $resultsCount = $request->query('count') ?? 10;
+        return $this->elasticsearchService->getRecommendations($searchRequest, $resultsCount);
     }
 }

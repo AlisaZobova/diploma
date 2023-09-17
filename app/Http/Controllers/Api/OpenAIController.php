@@ -4,8 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services;
-use App\Http\Requests\EmbeddingRequests;
-use Illuminate\Http\Request;
+use App\Http\Requests\EmbeddingRequests\CreateRequest;
 
 class OpenAIController extends Controller
 {
@@ -14,7 +13,7 @@ class OpenAIController extends Controller
     ) {
         //
     }
-    public function createEmbedding(EmbeddingRequests\CreateRequest $request) {
+    public function createEmbedding(CreateRequest $request) {
         $content = $request->input('content');
         return $this->openAIService->createEmbedding($content);
     }

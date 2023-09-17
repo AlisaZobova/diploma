@@ -10,9 +10,20 @@ class ElasticsearchService {
 
     public const MODEL = Model::ADA_002;
 
-    public function getRecommendations(string $content) {
-        $queryEmbedding = OpenAIFacade::createEmbedding(self::MODEL, $content)->getEmbedding();
-        return ElasticsearchFacade::getRecommendations($queryEmbedding);
+    public function getRecommendations(string|null $searchRequest, int $resultsCount = 10) {
+        abort_if(
+            !ElasticsearchFacade::isIndexExists(),
+            400,
+            'Index does not exist!'
+        );
+
+        if (!$searchRequest) {
+            return ElasticsearchFacade::getAllProducts();
+        }
+
+        $queryEmbedding = OpenAIFacade::createEmbedding(self::MODEL, $searchRequest)->getEmbedding();
+
+        return ElasticsearchFacade::getRecommendations($queryEmbedding, $resultsCount);
     }
 
 }

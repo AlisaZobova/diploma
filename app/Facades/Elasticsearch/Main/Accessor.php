@@ -25,35 +25,44 @@ class Accessor implements Contracts\ElasticsearchContract
             ->build();
 
         $this->indexName = 'embeddings';
+    }
 
+    public function isIndexExists(): bool {
         try {
             $this->client->indices()->get(['index' => $this->indexName]);
+            return true;
         } catch (ClientResponseException|ServerResponseException|Exception $e) {
-            try {
-                $this->client->indices()->create([
-                    'index' => $this->indexName,
-                    'body' => [
-                        'mappings' => [
-                            '_source' => [
-                                'enabled' => true
+            return false;
+        }
+    }
+
+    public function createIndex(): bool {
+        try {
+            $this->client->indices()->create([
+                'index' => $this->indexName,
+                'body' => [
+                    'mappings' => [
+                        '_source' => [
+                            'enabled' => true
+                        ],
+                        'properties' => [
+                            "embedding" => [
+                                "type" => "dense_vector",
+                                "index" => true,
+                                "dims" => 1536,
+                                "similarity" => "dot_product"
                             ],
-                            'properties' => [
-                                "embedding" => [
-                                    "type" => "dense_vector",
-                                    "index" => true,
-                                    "dims" => 1536,
-                                    "similarity" => "dot_product"
-                                ],
-                                "original_text" => [
-                                    "type" => "keyword"
-                                ]
+                            "original_text" => [
+                                "type" => "keyword"
                             ]
                         ]
                     ]
-                ]);
-            } catch (ClientResponseException|ServerResponseException|Exception $e) {
-                echo $e->getMessage();
-            }
+                ]
+            ]);
+            return true;
+        } catch (ClientResponseException|ServerResponseException|Exception $e) {
+            echo $e->getMessage();
+            return false;
         }
     }
 
@@ -74,6 +83,25 @@ class Accessor implements Contracts\ElasticsearchContract
         }
     }
 
+    public function getAllProducts() {
+        $params = [
+            'index' => $this->indexName,
+            'body' => [
+                        'query' => [
+                            'match_all' => new \stdClass()
+                        ],
+                '_source' => ['original_text'],
+                'sort' => [
+                    '_score' => ['order' => 'desc']
+                ]
+                ]
+        ];
+
+        $response = $this->client->search($params);
+
+        return $response['hits']['hits'];
+    }
+
     public function getRecommendations(array $queryEmbedding, int $resultsCount = 10)
     {
         $params = [
@@ -92,7 +120,7 @@ class Accessor implements Contracts\ElasticsearchContract
                     ]
                 ],
                 'size' => $resultsCount,
-                '_source' => ['original_text', 'embedding'], // Include any other fields you want in the response
+                '_source' => ['original_text'],
                 'sort' => [
                     '_score' => ['order' => 'desc']
                 ]
@@ -116,11 +144,9 @@ class Accessor implements Contracts\ElasticsearchContract
         $length = sqrt($sumOfSquares);
 
         if ($length > 0) {
-            $normalizedVector = array_map(function ($component) use ($length) {
+            return array_map(function ($component) use ($length) {
                 return $component / $length;
             }, $vector);
-
-            return $normalizedVector;
         }
 
         return $vector;

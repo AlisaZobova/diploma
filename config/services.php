@@ -36,8 +36,8 @@ return [
     ],
     'elasticsearch' => [
         'host' => env('ELASTICSEARCH_HOST', 'http://localhost:9200'),
-        'username' => env('ELASTICSEARCH_USERNAME', 'elastic'),
-        'password' => env('ELASTICSEARCH_PASSWORD'),
+        'username' => env('ELASTICSEARCH_AUTH_USERNAME', 'elastic'),
+        'password' => env('ELASTICSEARCH_AUTH_PASSWORD'),
         'crt_path' => base_path() . env('ELASTICSEARCH_CRT_PATH'),
 //        'api_key' => base_path() . env('ELASTICSEARCH_API_KEY')
     ]

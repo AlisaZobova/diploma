@@ -79,7 +79,6 @@ services:
           MYSQL_PASSWORD: '${DB_PASSWORD}'
       volumes:
           - 'mysql:/var/lib/mysql'
-          - '.:/var/www/html'
       networks:
           - ai-api
       healthcheck:

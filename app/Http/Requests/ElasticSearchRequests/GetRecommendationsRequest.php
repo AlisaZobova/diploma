@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Http\Requests\EmbeggingReguests;
+namespace App\Http\Requests\ElasticSearchRequests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CreateRequest extends FormRequest
+class GetRecommendationsRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,7 @@ class CreateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'search' => ['string']
         ];
     }
 }
