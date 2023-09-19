@@ -6,18 +6,19 @@ use App\Facades\ElasticsearchFacade;
 use App\Facades\OpenAI\Enums\Model;
 use App\Facades\OpenAIFacade;
 
-class ElasticsearchService {
-
+class ElasticsearchService
+{
     public const MODEL = Model::ADA_002;
 
-    public function getRecommendations(string|null $searchRequest, int $resultsCount = 10) {
+    public function getRecommendations(?string $searchRequest, int $resultsCount = 10)
+    {
         abort_if(
-            !ElasticsearchFacade::isIndexExists(),
+            ! ElasticsearchFacade::isIndexExists(),
             400,
             'Index does not exist!'
         );
 
-        if (!$searchRequest) {
+        if (! $searchRequest) {
             return ElasticsearchFacade::getAllProducts();
         }
 
@@ -30,5 +31,4 @@ class ElasticsearchService {
     {
         return ElasticsearchFacade::deleteDocument($documentId);
     }
-
 }

@@ -170,7 +170,7 @@ return [
         App\Providers\RouteServiceProvider::class,
 
         App\Providers\OpenAIProvider::class,
-        App\Providers\ElasticsearchProvider::class
+        App\Providers\ElasticsearchProvider::class,
     ])->toArray(),
 
     /*

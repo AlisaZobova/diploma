@@ -11,8 +11,8 @@ use Exception;
 
 class Accessor implements Contracts\ElasticsearchContract
 {
-
     private Client $client;
+
     private string $indexName;
 
     public function __construct()
@@ -31,6 +31,7 @@ class Accessor implements Contracts\ElasticsearchContract
     {
         try {
             $this->client->indices()->get(['index' => $this->indexName]);
+
             return true;
         } catch (ClientResponseException|ServerResponseException|Exception $e) {
             return false;
@@ -45,28 +46,30 @@ class Accessor implements Contracts\ElasticsearchContract
                 'body' => [
                     'mappings' => [
                         '_source' => [
-                            'enabled' => true
+                            'enabled' => true,
                         ],
                         'properties' => [
-                            "embedding" => [
-                                "type" => "dense_vector",
-                                "index" => true,
-                                "dims" => 1536,
-                                "similarity" => "dot_product"
+                            'embedding' => [
+                                'type' => 'dense_vector',
+                                'index' => true,
+                                'dims' => 1536,
+                                'similarity' => 'dot_product',
                             ],
-                            "description" => [
-                                "type" => "keyword"
+                            'description' => [
+                                'type' => 'keyword',
                             ],
-                            "created_at" => [
-                                "type" => "date"
-                            ]
-                        ]
-                    ]
-                ]
+                            'created_at' => [
+                                'type' => 'date',
+                            ],
+                        ],
+                    ],
+                ],
             ]);
+
             return true;
         } catch (ClientResponseException|ServerResponseException|Exception $e) {
             echo $e->getMessage();
+
             return false;
         }
     }
@@ -78,8 +81,8 @@ class Accessor implements Contracts\ElasticsearchContract
             'body' => [
                 'embedding' => $this->normalizeVector($embedding),
                 'description' => $originalText,
-                'created_at' => date("c", time())
-            ]
+                'created_at' => date('c', time()),
+            ],
         ];
 
         try {
@@ -93,11 +96,12 @@ class Accessor implements Contracts\ElasticsearchContract
     {
         $params = [
             'index' => $this->indexName,
-            'id' => $documentId
+            'id' => $documentId,
         ];
 
         try {
             $this->client->delete($params);
+
             return true;
         } catch (ClientResponseException|ServerResponseException|Exception $e) {
             return $e->getMessage();
@@ -110,14 +114,14 @@ class Accessor implements Contracts\ElasticsearchContract
             'index' => $this->indexName,
             'body' => [
                 'query' => [
-                    'match_all' => new \stdClass()
+                    'match_all' => new \stdClass(),
                 ],
                 '_source' => ['description', 'embedding'],
                 'size' => 100,
                 'sort' => [
-                    'created_at' => ['order' => 'asc']
-                ]
-            ]
+                    'created_at' => ['order' => 'asc'],
+                ],
+            ],
         ];
 
         $response = $this->client->search($params);
@@ -133,21 +137,21 @@ class Accessor implements Contracts\ElasticsearchContract
                 'query' => [
                     'script_score' => [
                         'query' => [
-                            'match_all' => new \stdClass()
+                            'match_all' => new \stdClass(),
                         ],
 
-                        "script" => [
-                            "source" => "cosineSimilarity(params.query_vector, 'embedding') + 1.0",
-                            "params" => ["query_vector" => $this->normalizeVector($queryEmbedding)]
-                        ]
-                    ]
+                        'script' => [
+                            'source' => "cosineSimilarity(params.query_vector, 'embedding') + 1.0",
+                            'params' => ['query_vector' => $this->normalizeVector($queryEmbedding)],
+                        ],
+                    ],
                 ],
                 'size' => $resultsCount,
                 '_source' => ['description'],
                 'sort' => [
                     '_score' => ['order' => 'desc'],
-                ]
-            ]
+                ],
+            ],
         ];
 
         $response = $this->client->search($params);
@@ -165,14 +169,14 @@ class Accessor implements Contracts\ElasticsearchContract
                 'query' => [
                     'script_score' => [
                         'query' => [
-                            'match_all' => new \stdClass()
+                            'match_all' => new \stdClass(),
                         ],
 
-                        "script" => [
-                            "source" => "cosineSimilarity(params.query_vector, 'embedding') + 1.0",
-                            "params" => ["query_vector" => $this->normalizeVector($queryEmbedding)]
-                        ]
-                    ]
+                        'script' => [
+                            'source' => "cosineSimilarity(params.query_vector, 'embedding') + 1.0",
+                            'params' => ['query_vector' => $this->normalizeVector($queryEmbedding)],
+                        ],
+                    ],
                 ],
                 'sort' => [
                     'created_at' => [
@@ -208,5 +212,4 @@ class Accessor implements Contracts\ElasticsearchContract
 
         return $vector;
     }
-
 }

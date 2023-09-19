@@ -6,11 +6,14 @@ use App\Facades\ElasticsearchFacade;
 use App\Facades\OpenAI\Enums\Model;
 use App\Facades\OpenAIFacade;
 
-class OpenAIService {
+class OpenAIService
+{
     public const MODEL = Model::ADA_002;
+
     public const MAX_TOKENS_COUNT = 8191;
 
-    public function createEmbedding(string $content) {
+    public function createEmbedding(string $content)
+    {
 
         abort_if(
             OpenAIFacade::countTokens(self::MODEL, $content) > self::MAX_TOKENS_COUNT,
@@ -18,12 +21,12 @@ class OpenAIService {
             __('The maximum number of tokens has been exceeded!')
         );
 
-        if (!ElasticsearchFacade::isIndexExists()) {
+        if (! ElasticsearchFacade::isIndexExists()) {
             ElasticsearchFacade::createIndex();
         }
 
         abort_if(
-            !ElasticsearchFacade::isIndexExists(),
+            ! ElasticsearchFacade::isIndexExists(),
             400,
             'Failed to create an index!'
         );
@@ -31,12 +34,14 @@ class OpenAIService {
         $embeddingContent = OpenAIFacade::createEmbedding(self::MODEL, $content)->getEmbedding();
 
         ElasticsearchFacade::createDocument($embeddingContent, $content);
+
         return $embeddingContent;
     }
 
-    function seedEmbeddings() {
+    public function seedEmbeddings()
+    {
 
-        $data = $this->parseDataset(base_path() . '/sts-test.csv');
+        $data = $this->parseDataset(base_path().'/sts-test.csv');
 
         foreach ($data as $row) {
             $this->createEmbedding($row['description1']);
@@ -48,13 +53,13 @@ class OpenAIService {
 
     public function parseDataset(string $csvFilePath)
     {
-        $valuesArray = array();
+        $valuesArray = [];
 
         if (($handle = fopen($csvFilePath, 'r'))) {
 
             while (($data = fgetcsv($handle, 1000, "\t"))) {
 
-                $rowArray = array(
+                $rowArray = [
                     'column1' => $data[0],
                     'column2' => $data[1],
                     'column3' => $data[2],
@@ -62,7 +67,7 @@ class OpenAIService {
                     'column5' => $data[4],
                     'description1' => $data[5],
                     'description2' => $data[6],
-                );
+                ];
 
                 $valuesArray[] = $rowArray;
             }
@@ -73,10 +78,11 @@ class OpenAIService {
         return $valuesArray;
     }
 
-    public function saveEmbeddingsToCsv() {
-        $data = $this->parseDataset(base_path() . '/sts-test-100.csv');
+    public function saveEmbeddingsToCsv()
+    {
+        $data = $this->parseDataset(base_path().'/sts-test-100.csv');
 
-        $fileHandle = fopen(base_path() . '/descriptions.csv', 'w');
+        $fileHandle = fopen(base_path().'/descriptions.csv', 'w');
 
         foreach ($data as $row) {
             $embeddingContent = OpenAIFacade::createEmbedding(self::MODEL, $row['description2'])->getEmbedding();
@@ -90,17 +96,18 @@ class OpenAIService {
         return true;
     }
 
-    public function saveScoresToCsv() {
+    public function saveScoresToCsv()
+    {
         $i = 1;
 
-        if (($handle = fopen(base_path() . '/descriptions.csv', 'r'))) {
+        if (($handle = fopen(base_path().'/descriptions.csv', 'r'))) {
 
-            while (($data = fgetcsv($handle, 100000, ","))) {
+            while (($data = fgetcsv($handle, 100000, ','))) {
 
-//                $fileHandle = fopen(base_path() . "/results-$i.csv", 'w');
-                $fileHandle = fopen(base_path() . "/items.csv", 'a');
+                //                $fileHandle = fopen(base_path() . "/results-$i.csv", 'w');
+                $fileHandle = fopen(base_path().'/items.csv', 'a');
 
-//                $recommendations = ElasticsearchFacade::getRecommendations(unserialize($data[1]), 100);
+                //                $recommendations = ElasticsearchFacade::getRecommendations(unserialize($data[1]), 100);
                 $recommendations = ElasticsearchFacade::getScore(unserialize($data[1]), $i);
 
                 foreach ($recommendations as $recommendation) {
