@@ -17,4 +17,16 @@ class OpenAIController extends Controller
         $content = $request->input('content');
         return $this->openAIService->createEmbedding($content);
     }
+
+    public function seedEmbeddings(CreateRequest $request) {
+        return $this->openAIService->seedEmbeddings();
+    }
+
+    public function saveEmbeddingsToCsv() {
+        return $this->openAIService->saveEmbeddingsToCsv();
+    }
+
+    public function saveScoresToCsv() {
+        return $this->openAIService->saveScoresToCsv();
+    }
 }

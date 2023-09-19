@@ -26,4 +26,9 @@ class ElasticsearchService {
         return ElasticsearchFacade::getRecommendations($queryEmbedding, $resultsCount);
     }
 
+    public function deleteDocument(string $documentId)
+    {
+        return ElasticsearchFacade::deleteDocument($documentId);
+    }
+
 }

@@ -24,10 +24,11 @@ class Accessor implements Contracts\ElasticsearchContract
 //            ->setApiKey(config('services.elasticsearch.api_key'))
             ->build();
 
-        $this->indexName = 'embeddings';
+        $this->indexName = 'product_embeddings';
     }
 
-    public function isIndexExists(): bool {
+    public function isIndexExists(): bool
+    {
         try {
             $this->client->indices()->get(['index' => $this->indexName]);
             return true;
@@ -36,7 +37,8 @@ class Accessor implements Contracts\ElasticsearchContract
         }
     }
 
-    public function createIndex(): bool {
+    public function createIndex(): bool
+    {
         try {
             $this->client->indices()->create([
                 'index' => $this->indexName,
@@ -52,8 +54,11 @@ class Accessor implements Contracts\ElasticsearchContract
                                 "dims" => 1536,
                                 "similarity" => "dot_product"
                             ],
-                            "original_text" => [
+                            "description" => [
                                 "type" => "keyword"
+                            ],
+                            "created_at" => [
+                                "type" => "date"
                             ]
                         ]
                     ]
@@ -72,7 +77,8 @@ class Accessor implements Contracts\ElasticsearchContract
             'index' => $this->indexName,
             'body' => [
                 'embedding' => $this->normalizeVector($embedding),
-                'original_text' => $originalText
+                'description' => $originalText,
+                'created_at' => date("c", time())
             ]
         ];
 
@@ -83,18 +89,35 @@ class Accessor implements Contracts\ElasticsearchContract
         }
     }
 
-    public function getAllProducts() {
+    public function deleteDocument(string $documentId)
+    {
+        $params = [
+            'index' => $this->indexName,
+            'id' => $documentId
+        ];
+
+        try {
+            $this->client->delete($params);
+            return true;
+        } catch (ClientResponseException|ServerResponseException|Exception $e) {
+            return $e->getMessage();
+        }
+    }
+
+    public function getAllProducts()
+    {
         $params = [
             'index' => $this->indexName,
             'body' => [
-                        'query' => [
-                            'match_all' => new \stdClass()
-                        ],
-                '_source' => ['original_text'],
+                'query' => [
+                    'match_all' => new \stdClass()
+                ],
+                '_source' => ['description', 'embedding'],
+                'size' => 100,
                 'sort' => [
-                    '_score' => ['order' => 'desc']
+                    'created_at' => ['order' => 'asc']
                 ]
-                ]
+            ]
         ];
 
         $response = $this->client->search($params);
@@ -120,11 +143,45 @@ class Accessor implements Contracts\ElasticsearchContract
                     ]
                 ],
                 'size' => $resultsCount,
-                '_source' => ['original_text'],
+                '_source' => ['description'],
                 'sort' => [
-                    '_score' => ['order' => 'desc']
+                    '_score' => ['order' => 'desc'],
                 ]
             ]
+        ];
+
+        $response = $this->client->search($params);
+
+        return $response['hits']['hits'];
+
+    }
+
+    public function getScore(array $queryEmbedding, int $productNumber)
+    {
+        $params = [
+            'index' => $this->indexName,
+            'track_scores' => true,
+            'body' => [
+                'query' => [
+                    'script_score' => [
+                        'query' => [
+                            'match_all' => new \stdClass()
+                        ],
+
+                        "script" => [
+                            "source" => "cosineSimilarity(params.query_vector, 'embedding') + 1.0",
+                            "params" => ["query_vector" => $this->normalizeVector($queryEmbedding)]
+                        ]
+                    ]
+                ],
+                'sort' => [
+                    'created_at' => [
+                        'order' => 'asc',
+                    ],
+                ],
+                'from' => $productNumber - 1,
+                'size' => 1,
+            ],
         ];
 
         $response = $this->client->search($params);

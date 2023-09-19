@@ -152,7 +152,7 @@
                 data.forEach(function (product) {
                     products.push({
                         id: product._id,
-                        description: product._source.original_text
+                        description: product._source.description
                     })
                 })
 
